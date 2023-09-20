@@ -1,0 +1,6 @@
+name: CowMilkingCooldown
+version: '${project.version}'
+main: com.ashkiano.cowmilkingcooldown.CowMilkingCooldown
+api-version: '1.16'
+author: AshKiano
+description: Adds a 5-minute cooldown on milking cows.
