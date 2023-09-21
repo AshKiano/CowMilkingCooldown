@@ -20,6 +20,8 @@ public class CowMilkingCooldown extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this);
+
+        Metrics metrics = new Metrics(this, 19845);
     }
 
     @EventHandler
