@@ -22,6 +22,8 @@ public class CowMilkingCooldown extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(this, this);
 
         Metrics metrics = new Metrics(this, 19845);
+
+        this.getLogger().info("Thank you for using the CowMilkingCooldown plugin! If you enjoy using this plugin, please consider making a donation to support the development. You can donate at: https://donate.ashkiano.com");
     }
 
     @EventHandler
