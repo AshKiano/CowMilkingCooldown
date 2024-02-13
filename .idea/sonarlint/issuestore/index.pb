@@ -21,3 +21,5 @@ s
 C.idea/libraries/Maven__com_google_j2objc_j2objc_annotations_1_3.xml,7\3\73d886e660a769d9a52c9b45d1d052000fe50541
 j
 :.idea/libraries/Maven__com_google_guava_guava_31_1_jre.xml,6\e\6e3ec46cf755269c911f4627cf234e4c4b5a6b93
+w
+G.idea/libraries/Maven__org_spigotmc_spigot_api_1_20_1_R0_1_SNAPSHOT.xml,c\1\c156183df4a21a7908b6b9896377282c2847cd5b
