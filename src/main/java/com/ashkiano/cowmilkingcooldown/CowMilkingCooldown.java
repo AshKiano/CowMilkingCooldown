@@ -1,12 +1,15 @@
 package com.ashkiano.cowmilkingcooldown;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Cow;
+import org.bukkit.entity.MushroomCow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONObject;
 
@@ -20,7 +23,9 @@ import java.util.UUID;
 public class CowMilkingCooldown extends JavaPlugin implements Listener {
 
     private final HashMap<UUID, HashMap<UUID, Long>> cooldowns = new HashMap<>();
-    private static final long COOLDOWN_TIME = 300000; // 5 minutes in milliseconds
+    private long cooldown = 300; // 5 minutes in seconds
+    private boolean applyToMooshrooms = true;
+    private boolean applyToCows = true;
 
     @Override
     public void onEnable() {
@@ -28,9 +33,35 @@ public class CowMilkingCooldown extends JavaPlugin implements Listener {
 
         Metrics metrics = new Metrics(this, 19845);
 
+        loadConfigValues();
+
         this.getLogger().info("Thank you for using the CowMilkingCooldown plugin! If you enjoy using this plugin, please consider making a donation to support the development. You can donate at: https://donate.ashkiano.com");
 
         checkForUpdates();
+    }
+
+    private void loadConfigValues() {
+        this.saveDefaultConfig();
+
+        applyDefaultValueIfNotFound("cooldown", 300);
+        applyDefaultValueIfNotFound("mushroom-stew-from-mooshroom", false);
+        applyDefaultValueIfNotFound("apply-to-cows", true);
+
+        cooldown = this.getConfig().getLong("cooldown");
+        applyToMooshrooms = this.getConfig().getBoolean("mushroom-stew-from-mooshroom");
+        applyToCows = this.getConfig().getBoolean("apply-to-cows");
+    }
+
+    public void applyDefaultValueIfNotFound(String path, Object value) {
+        if (!this.getConfig().contains(path)) {
+            this.getConfig().set(path, value);
+            this.saveConfig();
+        }
+    }
+
+    public void reload() {
+        super.reloadConfig();
+        loadConfigValues();
     }
 
     @EventHandler
@@ -42,25 +73,45 @@ public class CowMilkingCooldown extends JavaPlugin implements Listener {
         Cow cow = (Cow) event.getRightClicked();
         Player player = event.getPlayer();
 
-        if (player.getItemInHand().getType() != Material.BUCKET) {
-            return;
-        }
+        ItemStack stack = event.getPlayer().getInventory().getItem(event.getHand());
 
+        if (applyToCows)
+            if (checkCow(cow, player, stack)) event.setCancelled(true);
+        if (applyToMooshrooms)
+            if (checkMooshroom(cow, player, stack)) event.setCancelled(true);
+    }
+
+    public boolean checkCow(Cow cow, Player player, ItemStack stack) {
+        if (stack != null && stack.getType() != Material.BUCKET) {
+            return false;
+        }
+        return (updateMilkingCooldown(player, cow, ChatColor.RED+"You must wait %s seconds before milking this cow again!"));
+    }
+
+    public boolean checkMooshroom(Cow cow, Player player, ItemStack stack) {
+        if (stack != null && stack.getType() != Material.BOWL) {
+            return false;
+        }
+        if (!(cow instanceof MushroomCow)) return false;
+        return (updateMilkingCooldown(player, cow, ChatColor.RED+"You must wait %s seconds before milking this mooshroom again!"));
+    }
+
+    public boolean updateMilkingCooldown(Player player, Cow cow, String message) {
         UUID cowUUID = cow.getUniqueId();
         UUID playerUUID = player.getUniqueId();
 
         cooldowns.computeIfAbsent(cowUUID, k -> new HashMap<>());
 
         if (cooldowns.get(cowUUID).containsKey(playerUUID)) {
-            long cooldownTimeLeft = (cooldowns.get(cowUUID).get(playerUUID) + COOLDOWN_TIME) - System.currentTimeMillis();
+            long cooldownTimeLeft = (cooldowns.get(cowUUID).get(playerUUID) + cooldown*1000L) - System.currentTimeMillis();
+
             if (cooldownTimeLeft > 0) {
-                event.setCancelled(true);
-                player.sendMessage("§cYou must wait " + (cooldownTimeLeft / 1000) + " seconds before milking this cow again!");
-                return;
+                player.sendMessage(String.format(message, (cooldownTimeLeft/1000L)));
+                return true;
             }
         }
-
         cooldowns.get(cowUUID).put(playerUUID, System.currentTimeMillis());
+        return false;
     }
 
     private void checkForUpdates() {
