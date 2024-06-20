@@ -1,5 +1,5 @@
 name: CowMilkingCooldown
-version: '1.4'
+version: '1.5'
 main: com.ashkiano.cowmilkingcooldown.CowMilkingCooldown
 api-version: '1.16'
 author: AshKiano
